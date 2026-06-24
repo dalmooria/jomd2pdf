@@ -5,7 +5,8 @@
 ## 로컬 실행
 정적 파일이지만 ES 모듈은 http로 서빙해야 합니다(`file://` 불가):
 ```bash
-npm run serve   # http://localhost:8080 (또는 npx serve)
+npm run serve   # python3 -m http.server 8080 (python3 필요)
+# 또는: npx serve .
 ```
 Chrome/Edge 권장.
 

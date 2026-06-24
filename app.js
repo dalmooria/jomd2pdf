@@ -124,10 +124,17 @@ const renderFileList = () => {
       const item = document.createElement('div')
       item.className = 'file-item' + (m.key === state.selectedKey ? ' selected' : '')
       if (group.folder) item.classList.add('indented')
-      const check = m.key === state.selectedKey ? '✓ ' : ''
-      item.innerHTML = `<span class="fname">${check}${m.name}</span><button class="del" title="삭제">✕</button>`
-      item.querySelector('.fname').onclick = () => selectFile(m.key)
-      item.querySelector('.del').onclick = (e) => { e.stopPropagation(); removeFile(m.key) }
+      const span = document.createElement('span')
+      span.className = 'fname'
+      span.textContent = (m.key === state.selectedKey ? '✓ ' : '') + m.name
+      span.onclick = () => selectFile(m.key)
+      const btn = document.createElement('button')
+      btn.className = 'del'
+      btn.title = '삭제'
+      btn.textContent = '✕'
+      btn.onclick = (e) => { e.stopPropagation(); removeFile(m.key) }
+      item.appendChild(span)
+      item.appendChild(btn)
       els.fileList.appendChild(item)
     }
   }
@@ -198,13 +205,14 @@ const renderSettingsPanel = () => {
       const k = el.dataset.k
       let v
       if (el.type === 'checkbox') v = el.checked
-      else if (el.type === 'number') v = parseFloat(el.value)
+      else if (el.type === 'number') { const n = parseFloat(el.value); v = Number.isFinite(n) ? n : DEFAULT_SETTINGS[k] }
       else v = el.value
       if (k === 'codeTheme') applyCodeTheme(v)
       onSettingsChange({ [k]: v })
     }
   })
   els.settingsPanel.querySelector('#reset-settings').onclick = () => {
+    clearTimeout(debounceTimer)
     state.settings = { ...DEFAULT_SETTINGS }
     saveSettings(localStorage, state.settings)
     applyCodeTheme(state.settings.codeTheme)

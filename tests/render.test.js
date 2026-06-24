@@ -41,7 +41,6 @@ describe('renderMarkdown', () => {
 
 describe('rewriteImageSources', () => {
   it('replaces relative img src with object url and tracks for cleanup', () => {
-    const created = []
     globalThis.URL.createObjectURL = () => 'blob:fake-123'
     const div = document.createElement('div')
     div.innerHTML = '<img src="./img/d.png">'
