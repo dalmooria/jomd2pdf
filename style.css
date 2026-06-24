@@ -13,3 +13,20 @@ body { margin: 0; font-family: var(--body-font); }
 #file-list { flex: 0 0 220px; overflow: auto; border-right: 1px solid #eee; padding: 8px; }
 #preview-wrap { flex: 1; overflow: auto; background: #f3f4f6; padding: 16px; }
 #preview { background: white; margin: 0 auto; }
+
+/* 미리보기 본문 타이포 */
+#preview .pagedjs_page_content { font-size: var(--body-size); line-height: var(--line-height); }
+#preview h1, #preview h2, #preview h3 { break-after: avoid; }
+#preview pre, #preview table, #preview .katex-display,
+#preview .mermaid-rendered, #preview img { break-inside: avoid; }
+#preview img, #preview .mermaid-rendered svg { max-width: 100%; height: auto; }
+#preview .mermaid-error { color: #b91c1c; border: 1px solid #fca5a5; padding: 8px; }
+#preview img[data-missing] { display: inline-block; padding: 8px; border: 1px dashed #f87171; color: #b91c1c; }
+
+/* 인쇄: 화면 UI 숨김, 여백은 Paged.js 전담 → @page margin 0 */
+@media print {
+  #toolbar, #file-list, #settings-panel, #browser-warning { display: none !important; }
+  #preview-wrap { overflow: visible; background: white; padding: 0; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 0; }
+}
