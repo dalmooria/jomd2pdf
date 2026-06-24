@@ -1,0 +1,15 @@
+:root {
+  --page-width: 210mm;
+  --page-margin: 20mm;
+  --body-font: "Pretendard", "Noto Sans KR", sans-serif;
+  --body-size: 11pt;
+  --line-height: 1.6;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--body-font); }
+#toolbar { display: flex; gap: 8px; align-items: center; padding: 8px 12px; border-bottom: 1px solid #ddd; }
+#toolbar .brand { font-weight: 700; margin-right: auto; }
+#layout { display: flex; height: calc(100vh - 49px); }
+#file-list { flex: 0 0 220px; overflow: auto; border-right: 1px solid #eee; padding: 8px; }
+#preview-wrap { flex: 1; overflow: auto; background: #f3f4f6; padding: 16px; }
+#preview { background: white; margin: 0 auto; }

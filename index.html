@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MD → PDF 변환기</title>
+
+  <!-- 한글 폰트: Pretendard(주) + Noto Sans KR(대체) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap">
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <!-- highlight.js 기본 테마(코드 테마는 동적으로 교체) -->
+  <link rel="stylesheet" id="hljs-theme" href="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/github.min.css">
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header id="toolbar">
+    <span class="brand">📄 MD → PDF</span>
+    <input id="folder-input" type="file" webkitdirectory multiple hidden>
+    <input id="file-input" type="file" accept=".md,image/*" multiple hidden>
+    <button id="pick-folder">📁 폴더 선택</button>
+    <button id="pick-files">＋ 파일 추가</button>
+    <button id="toggle-settings">⚙ 설정</button>
+    <button id="print-btn">🖨 인쇄</button>
+  </header>
+
+  <div id="settings-panel" hidden></div>
+  <div id="browser-warning" hidden>이 도구는 Chrome/Edge에서 가장 정확하게 인쇄됩니다.</div>
+
+  <main id="layout">
+    <aside id="file-list"></aside>
+    <section id="preview-wrap"><div id="preview"></div></section>
+  </main>
+
+  <!-- CDN UMD 전역 -->
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-texmath@1.0.0/texmath.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-task-lists@2.1.1/dist/markdown-it-task-lists.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/markdown-it-footnote@4.0.0/dist/markdown-it-footnote.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.3.0/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pagedjs@0.4.3/dist/paged.polyfill.js"></script>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

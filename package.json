@@ -1,0 +1,21 @@
+{
+  "name": "jomd2pdf",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0",
+    "jsdom": "^25.0.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-texmath": "^1.0.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "markdown-it-footnote": "^4.0.0",
+    "katex": "^0.16.11",
+    "dompurify": "^3.1.6",
+    "highlight.js": "^11.10.0"
+  }
+}
