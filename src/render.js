@@ -54,8 +54,9 @@ export const renderMermaid = async (container, mermaid) => {
   for (const code of blocks) {
     const pre = code.closest('pre')
     const def = code.textContent
+    const id = `mmd-${i++}`
     try {
-      const { svg } = await mermaid.render(`mmd-${i++}`, def)
+      const { svg } = await mermaid.render(id, def)
       const wrap = document.createElement('div')
       wrap.className = 'mermaid-rendered'
       wrap.innerHTML = svg
@@ -65,6 +66,9 @@ export const renderMermaid = async (container, mermaid) => {
       err.className = 'mermaid-error'
       err.textContent = `Mermaid 오류: ${e.message || e}`
       pre.replaceWith(err)
+    } finally {
+      // mermaid는 렌더 실패 시 <body>에 임시 오류 노드(#d<id>)를 남긴다 → 인쇄/PDF 누출 방지로 정리
+      document.getElementById('d' + id)?.remove()
     }
   }
 }
