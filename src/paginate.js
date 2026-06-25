@@ -17,21 +17,15 @@ export const buildPageRules = (settings) => {
 }`
 }
 
-export const paginate = async ({ html, settings, previewEl, Paged }) => {
-  // 동적 @page 규칙 주입(교체)
-  let styleEl = document.getElementById('paged-page-rules')
-  if (!styleEl) {
-    styleEl = document.createElement('style')
-    styleEl.id = 'paged-page-rules'
-    document.head.appendChild(styleEl)
-  }
-  styleEl.textContent = buildPageRules(settings)
-
+export const paginate = async ({ html, settings, previewEl, Paged, extraCss = '' }) => {
   previewEl.innerHTML = ''
   const source = document.createElement('template')
   source.innerHTML = html
+  const css = buildPageRules(settings) + '\n' + extraCss
   const previewer = new Paged.Previewer()
-  await previewer.preview(source.content, [], previewEl)
+  // paged.js는 author CSS를 stylesheets 인자로 받아야 @page·break 규칙을 적용한다.
+  // []를 넘기면 규칙이 무시되고 기본값(US Letter, 분할 없음)이 쓰인다.
+  await previewer.preview(source.content, [{ _: css }], previewEl)
 }
 
 export const print = () => window.print()

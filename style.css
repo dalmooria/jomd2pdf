@@ -20,12 +20,27 @@ body { margin: 0; font-family: var(--body-font); }
 #preview pre, #preview table, #preview .katex-display,
 #preview .mermaid-rendered, #preview img { break-inside: avoid; }
 #preview img, #preview .mermaid-rendered svg { max-width: 100%; height: auto; }
+/* 표: 페이지 폭에 맞춰 고정 레이아웃 + 셀 줄바꿈(가로 오버플로우/열 잘림 방지).
+   table-layout:fixed라야 페이지 경계에서 쪼개진 조각도 같은 열 폭을 유지한다. */
+#preview table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 0.85em; }
+#preview th, #preview td { border: 1px solid #cbd5e1; padding: 3px 5px; text-align: left; vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+#preview thead th { background: #f1f5f9; }
+/* 인용(blockquote): 좌측 바 + 옅은 배경 (기본 UA 스타일은 들여쓰기뿐이라 인용으로 안 보임) */
+#preview blockquote { margin: 0.6em 0; padding: 0.4em 0.9em; border-left: 4px solid #cbd5e1; background: #f8fafc; color: #475569; }
+#preview blockquote > :first-child { margin-top: 0; }
+#preview blockquote > :last-child { margin-bottom: 0; }
+/* 코드블록(pre): 박스(배경·테두리·여백)는 pre가 담당, 내부 code는 투명(hljs 색상은 유지).
+   white-space:pre-wrap로 페이지 폭 초과 시 줄바꿈 → 인쇄 시 가로 잘림 방지 */
+#preview pre { background: #f6f8fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.7em 0.9em; overflow-x: auto; }
+#preview pre code, #preview pre code.hljs { display: block; background: transparent; padding: 0; font-size: 0.85em; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+/* 인라인 코드 */
+#preview :not(pre) > code { background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.9em; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 #preview .mermaid-error { color: #b91c1c; border: 1px solid #fca5a5; padding: 8px; }
 #preview img[data-missing] { display: inline-block; padding: 8px; border: 1px dashed #f87171; color: #b91c1c; }
 
 /* 인쇄: 화면 UI 숨김, 여백은 Paged.js 전담 → @page margin 0 */
 @media print {
-  #toolbar, #file-list, #settings-panel, #browser-warning { display: none !important; }
+  #toolbar, #file-list, #settings-panel, #batch-panel, #browser-warning { display: none !important; }
   #preview-wrap { overflow: visible; background: white; padding: 0; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { margin: 0; }
@@ -44,6 +59,15 @@ body { margin: 0; font-family: var(--body-font); }
 #file-list .file-item.selected { background: #dbeafe; font-weight: 600; }
 #layout.drag-over { outline: 3px dashed #60a5fa; outline-offset: -3px; }
 #preview .empty-doc { color: #9ca3af; text-align: center; padding: 40px; }
+/* 일괄 PDF: 문서 경계 페이지 분할은 app.js가 인라인 break-before로 지정 */
+#preview .doc-title { font-size: 1.5em; border-bottom: 2px solid #ddd; padding-bottom: .2em; margin-top: 0; }
+
+#batch-panel { position: absolute; right: 12px; top: 50px; z-index: 10; background: white; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 12px; width: 280px; }
+#batch-panel .group-title { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 8px; }
+#batch-panel .field { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 4px; }
+#batch-panel button { display: block; width: 100%; margin-top: 8px; padding: 8px; cursor: pointer; }
+#batch-panel .batch-hint { font-size: 12px; color: #6b7280; line-height: 1.5; margin: 10px 0 0; }
+
 #settings-panel { position: absolute; right: 12px; top: 50px; z-index: 10; background: white; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 12px; width: 280px; }
 #settings-panel .settings-group { margin-bottom: 12px; }
 #settings-panel .group-title { font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 6px; }

@@ -27,7 +27,13 @@ const els = {
   fileList: document.getElementById('file-list'),
   preview: document.getElementById('preview'),
   settingsPanel: document.getElementById('settings-panel'),
+  batchPanel: document.getElementById('batch-panel'),
 }
+
+// 인쇄→PDF 저장 시 브라우저는 document.title을 기본 파일명으로 제안한다.
+// 파일 선택 시 문서명(확장자 제외)으로 바꿔 "파일명.pdf"로 저장되게 하고, 선택 해제 시 앱 제목 복원.
+const APP_TITLE = document.title
+const docTitle = (name) => name.replace(/\.(md|markdown)$/i, '')
 
 applySettings(state.settings, document.documentElement)
 
@@ -88,6 +94,7 @@ const removeFile = (key) => {
     state.selectedKey = null
     cleanupUrls()
     els.preview.innerHTML = ''
+    document.title = APP_TITLE
   }
   renderFileList()
 }
@@ -97,6 +104,7 @@ const clearAll = () => {
   state.selectedKey = null
   cleanupUrls()
   els.preview.innerHTML = ''
+  document.title = APP_TITLE
   renderFileList()
 }
 
@@ -146,25 +154,85 @@ const cleanupUrls = () => {
   state.objectUrls = []
 }
 
+// md 한 개 → 렌더된 컨테이너(div). 이미지 경로까지 치환.
+// mermaid는 호출부에서 처리(합본 시 합친 뒤 일괄 렌더 → 문서 간 id 충돌 방지).
+const renderDoc = async (md) => {
+  const text = await md.file.text()
+  const div = document.createElement('div')
+  if (!text.trim()) {
+    div.innerHTML = '<p class="empty-doc">내용이 없는 문서입니다.</p>'
+    return div
+  }
+  div.innerHTML = renderer.renderMarkdown(text)
+  rewriteImageSources(div, dirname(md.key), state.registry.images, state.objectUrls)
+  return div
+}
+
 const selectFile = async (key) => {
   state.selectedKey = key
   renderFileList()
   const md = state.registry.mdFiles.find(m => m.key === key)
   if (!md) return
-  const text = await md.file.text()
-
+  document.title = docTitle(md.name)
   cleanupUrls()
-  if (!text.trim()) {
-    els.preview.innerHTML = '<p class="empty-doc">내용이 없는 문서입니다.</p>'
-    return
-  }
-  const html = renderer.renderMarkdown(text)
-  const tmp = document.createElement('div')
-  tmp.innerHTML = html
-  rewriteImageSources(tmp, dirname(key), state.registry.images, state.objectUrls)
-  await renderMermaid(tmp, window.mermaid)
+  const div = await renderDoc(md)
+  await renderMermaid(div, window.mermaid)
   await document.fonts.ready
-  await paginate({ html: tmp.innerHTML, settings: state.settings, previewEl: els.preview, Paged })
+  await paginate({ html: div.innerHTML, settings: state.settings, previewEl: els.preview, Paged })
+}
+
+// --- 일괄 PDF ---
+// 전체 합본: 문서마다 section으로 감싸 이어붙이고(섹션 경계 = 페이지 분할), mermaid는 합친 뒤 일괄 렌더.
+const printMerged = async (mds, { titleHeader }) => {
+  if (!mds.length) return
+  cleanupUrls()
+  state.selectedKey = null
+  renderFileList()
+  const wrap = document.createElement('div')
+  for (const [i, md] of mds.entries()) {
+    const sec = document.createElement('section')
+    sec.className = 'doc-section'
+    if (i > 0) sec.classList.add('doc-pagebreak') // 둘째 문서부터 새 페이지에서 시작
+    if (titleHeader) {
+      const h = document.createElement('h1')
+      h.className = 'doc-title'
+      h.textContent = md.name
+      sec.appendChild(h)
+    }
+    const div = await renderDoc(md)
+    while (div.firstChild) sec.appendChild(div.firstChild)
+    wrap.appendChild(sec)
+  }
+  await renderMermaid(wrap, window.mermaid)
+  await document.fonts.ready
+  await paginate({
+    html: wrap.innerHTML, settings: state.settings, previewEl: els.preview, Paged,
+    extraCss: '.doc-pagebreak { break-before: page; }',
+  })
+  print()
+}
+
+// 문서별 개별: 한 문서씩 렌더→인쇄, afterprint로 다음 문서까지 대기.
+// document.title을 파일명으로 바꿔 저장 대화상자의 파일명을 자동 제안.
+const printEach = async (mds) => {
+  if (!mds.length) return
+  const prevTitle = document.title
+  for (const md of mds) {
+    cleanupUrls()
+    state.selectedKey = md.key
+    renderFileList()
+    const div = await renderDoc(md)
+    await renderMermaid(div, window.mermaid)
+    await document.fonts.ready
+    await paginate({ html: div.innerHTML, settings: state.settings, previewEl: els.preview, Paged })
+    document.title = docTitle(md.name)
+    await new Promise((resolve) => {
+      const done = () => { window.removeEventListener('afterprint', done); resolve() }
+      window.addEventListener('afterprint', done, { once: true })
+      print()
+    })
+  }
+  document.title = prevTitle
 }
 
 // --- 설정 패널 ---
@@ -231,6 +299,31 @@ document.getElementById('toggle-settings').onclick = () => {
   els.settingsPanel.hidden = !els.settingsPanel.hidden
 }
 document.getElementById('print-btn').onclick = () => print()
+
+// --- 일괄 PDF 패널 ---
+const renderBatchPanel = () => {
+  const n = state.registry.mdFiles.length
+  els.batchPanel.innerHTML = `
+    <div class="group-title">일괄 PDF — 전체 ${n}개 문서</div>
+    <label class="field"><input type="checkbox" id="batch-title" checked> 파일명 제목 머리말 넣기</label>
+    <button id="batch-merged">📄 전체 합쳐 1개 PDF</button>
+    <button id="batch-each">🗂 문서별 개별 PDF</button>
+    <p class="batch-hint">· 합본: 문서 사이에 페이지를 나눠 PDF 하나로 인쇄(1회).<br>· 개별: 문서마다 저장 대화상자가 한 번씩 뜹니다(파일명 자동 제안).</p>`
+  const opts = () => ({ titleHeader: els.batchPanel.querySelector('#batch-title').checked })
+  els.batchPanel.querySelector('#batch-merged').onclick = () => {
+    els.batchPanel.hidden = true
+    printMerged(state.registry.mdFiles, opts())
+  }
+  els.batchPanel.querySelector('#batch-each').onclick = () => {
+    els.batchPanel.hidden = true
+    printEach(state.registry.mdFiles)
+  }
+}
+
+document.getElementById('toggle-batch').onclick = () => {
+  if (els.batchPanel.hidden) renderBatchPanel()
+  els.batchPanel.hidden = !els.batchPanel.hidden
+}
 
 // 비-Chromium 경고
 if (!/Chrome|Edg/.test(navigator.userAgent)) {
